@@ -49,21 +49,24 @@ jobs:
       - name: Build ISO
         run: $RUN ./iso/build-iso.sh 2>&1 | tee -a build.log
 
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" out
+          ISO=out/openvana-1.0-x86_64.iso
+          ls -lh "$ISO" | tee -a build.log
+          (cd out && sha256sum openvana-1.0-x86_64.iso > openvana-1.0-x86_64.iso.sha256)
+          gh release delete v1.0 --yes --cleanup-tag 2>&1 | tee -a build.log || true
+          gh release create v1.0 "$ISO" "$ISO.sha256" \
+            --title "openVana 1.0" \
+            --notes "Bootable openVana 1.0 ISO (x86_64, BIOS + UEFI). Write it to a USB stick (e.g. with balenaEtcher or Rufus) and boot. Built from ${GITHUB_SHA::7}." 2>&1 | tee -a build.log
+
       - name: Report failure
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          sudo chown "$(id -u)" build.log 2>/dev/null || true
           { echo '### ISO build failed — last log lines'; echo '```'; tail -c 60000 build.log; echo '```'; } > comment.md
           gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/comments" -F body=@comment.md
-
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          ISO=out/openvana-1.0-x86_64.iso
-          sha256sum "$ISO" | sed 's#  .*/#  #' > "$ISO.sha256"
-          gh release delete v1.0 --yes --cleanup-tag || true
-          gh release create v1.0 "$ISO" "$ISO.sha256" \
-            --title "openVana 1.0" \
-            --notes "Bootable openVana 1.0 ISO (x86_64, BIOS + UEFI). Write it to a USB stick (e.g. with balenaEtcher or Rufus) and boot. Built from ${GITHUB_SHA::7}."
