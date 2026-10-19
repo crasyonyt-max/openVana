@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 180
     defaults:
       run:
+        shell: bash
         working-directory: "1.0"
     env:
       RUN: docker run --rm -v ${{ github.workspace }}/1.0:/src openvana-build

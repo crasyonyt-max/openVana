@@ -21,7 +21,8 @@ apk add --root "$ROOT" --initdb --no-cache --update-cache $PKGS
 
 # --- VanaKernel modules ---
 KREL=$(cat "$OUT/kernel/release")
-cp -a "$OUT/kernel/modules/lib/modules/$KREL" "$ROOT/lib/modules/"
+mkdir -p "$ROOT/lib/modules"
+cp -a "$OUT/kernel/modules/lib/modules/$KREL" "$ROOT/lib/modules/$KREL"
 rm -f "$ROOT/lib/modules/$KREL/build" "$ROOT/lib/modules/$KREL/source"
 depmod -b "$ROOT" "$KREL"
 
@@ -63,7 +64,13 @@ sed -i "s|^tty1::.*|tty1::respawn:/sbin/agetty --autologin $USERNAME --noclear t
 sed -i 's|^tty[3-6]::|#&|' "$ROOT/etc/inittab"
 
 # --- services (minimal set) ---
-svc() { lvl=$1; shift; for s; do chroot "$ROOT" rc-update add "$s" "$lvl" >/dev/null; done; }
+svc() {
+    lvl=$1; shift
+    for s; do
+        if [ -e "$ROOT/etc/init.d/$s" ]; then chroot "$ROOT" rc-update add "$s" "$lvl" >/dev/null
+        else echo "WARNING: service $s not found, skipped"; fi
+    done
+}
 svc sysinit devfs dmesg udev udev-trigger udev-settle
 svc boot    modules sysctl hostname bootmisc hwclock binfmt networking
 svc default dbus seatd iwd dhcpcd waydroid-container local

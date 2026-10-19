@@ -18,5 +18,5 @@ cp "$HERE/grub.cfg" "$ISO/boot/grub/grub.cfg"
 mksquashfs "$OUT/rootfs" "$ISO/openvana/rootfs.sqfs" -comp zstd -Xcompression-level 19 \
     -b 1M -noappend -no-progress -wildcards -e 'proc/*' 'sys/*' 'dev/*' 'tmp/*'
 
-grub-mkrescue -o "$OUT/$NAME" "$ISO" -volid OPENVANA -- -quiet
+grub-mkrescue -o "$OUT/$NAME" "$ISO" -volid OPENVANA
 echo "ISO: $OUT/$NAME ($(du -h "$OUT/$NAME" | cut -f1))"
