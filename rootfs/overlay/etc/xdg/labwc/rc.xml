@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!-- openVana 1.0 window manager settings (labwc) -->
+<labwc_config>
+  <core><decoration>server</decoration><gap>0</gap></core>
+  <theme>
+    <name></name>
+    <cornerRadius>8</cornerRadius>
+    <titlebar><layout>icon:max,close</layout></titlebar>
+    <font place="ActiveWindow"><name>DejaVu Sans</name><size>10</size></font>
+  </theme>
+  <placement><policy>center</policy></placement>
+  <keyboard>
+    <default />
+    <!-- Super key opens the openVana start menu -->
+    <keybind key="Super_L" onRelease="yes">
+      <action name="Execute" command="pkill -USR1 -x vana-shell" />
+    </keybind>
+    <keybind key="W-Return"><action name="Execute" command="chromium" /></keybind>
+    <keybind key="A-F4"><action name="Close" /></keybind>
+  </keyboard>
+  <!-- no right-click desktop menu: the start menu is the only launcher -->
+  <mouse><default /><context name="Root"><mousebind button="Right" action="Press" /></context></mouse>
+</labwc_config>

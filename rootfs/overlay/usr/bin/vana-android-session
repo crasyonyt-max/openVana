@@ -1,0 +1,11 @@
+#!/bin/sh
+# Started with the desktop: boots the Android runtime in the background and
+# installs the APKs that ship with openVana (once per user).
+STAMP=$HOME/.local/share/openvana/bundled-apks-installed
+[ -e /var/lib/waydroid/waydroid.cfg ] || exit 0
+waydroid session start >/dev/null 2>&1 &
+[ -e "$STAMP" ] && exit 0
+for apk in /usr/share/openvana/apks/*.apk; do
+    [ -f "$apk" ] && vana-apk install "$apk"
+done
+mkdir -p "${STAMP%/*}" && touch "$STAMP"

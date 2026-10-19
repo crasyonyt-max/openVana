@@ -1,0 +1,1 @@
+Place VanaKernel patches (*.patch, -p1) here; build-kernel.sh applies them in order.

@@ -1,0 +1,10 @@
+# Dark window decorations matching the openVana palette
+window.active.title.bg.color: #0E3B2C
+window.inactive.title.bg.color: #141414
+window.active.label.text.color: #F0F0EC
+window.inactive.label.text.color: #8a8a8a
+window.active.button.unpressed.image.color: #F0F0EC
+window.inactive.button.unpressed.image.color: #8a8a8a
+window.active.border.color: #0E3B2C
+window.inactive.border.color: #141414
+border.width: 1

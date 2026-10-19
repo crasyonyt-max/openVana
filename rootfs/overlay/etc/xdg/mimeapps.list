@@ -1,0 +1,10 @@
+[Default Applications]
+application/vnd.android.package-archive=vana-apk.desktop
+application/x-ms-dos-executable=vana-exe.desktop
+application/x-msdownload=vana-exe.desktop
+application/vnd.microsoft.portable-executable=vana-exe.desktop
+application/x-msi=vana-exe.desktop
+application/x-ms-installer=vana-exe.desktop
+text/html=chromium.desktop
+x-scheme-handler/http=chromium.desktop
+x-scheme-handler/https=chromium.desktop

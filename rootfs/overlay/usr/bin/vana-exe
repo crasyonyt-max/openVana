@@ -1,0 +1,11 @@
+#!/bin/sh
+# vana-exe — run a Windows program (.exe / .msi) on openVana with Wine.
+set -eu
+[ -f "${1:-}" ] || { echo "usage: vana-exe <program.exe|installer.msi>" >&2; exit 2; }
+export WINEDEBUG=${WINEDEBUG:--all}
+# Skip the Mono/Gecko download prompts on first start (keeps things light).
+export WINEDLLOVERRIDES=${WINEDLLOVERRIDES:-mscoree,mshtml=}
+case "$1" in
+    *.msi|*.MSI) exec wine msiexec /i "$1" ;;
+    *)           cd "$(dirname "$1")" && exec wine start /wait /unix "$1" ;;
+esac

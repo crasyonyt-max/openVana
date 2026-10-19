@@ -1,0 +1,4 @@
+# openVana session startup
+vana-shell &
+/usr/libexec/pipewire-launcher &
+vana-android-session &

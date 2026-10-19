@@ -1,0 +1,5 @@
+
+  openVana 1.0 — open source operating system
+  Install to disk:  doas vana-install /dev/<disk>
+  Wi-Fi:            iwctl station wlan0 connect <network>
+

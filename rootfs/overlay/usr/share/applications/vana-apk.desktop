@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Install Android App
+Exec=vana-apk install %f
+MimeType=application/vnd.android.package-archive;
+NoDisplay=true

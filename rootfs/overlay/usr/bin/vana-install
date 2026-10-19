@@ -1,0 +1,41 @@
+#!/bin/sh
+# vana-install — install openVana 1.0 from the live system to a disk (UEFI).
+#   doas vana-install /dev/nvme0n1
+# WARNING: erases the whole target disk.
+set -eu
+DISK=${1:-}
+SQFS=/media/openvana-live/openvana/rootfs.sqfs
+[ -b "$DISK" ] || { echo "usage: vana-install /dev/<disk>"; lsblk -d -o NAME,SIZE,MODEL 2>/dev/null || true; exit 2; }
+[ -f "$SQFS" ] || { echo "Run this from the openVana live system."; exit 1; }
+[ "$(id -u)" = 0 ] || exec doas "$0" "$@"
+
+printf 'ALL DATA ON %s WILL BE ERASED. Type YES to continue: ' "$DISK"
+read -r ans; [ "$ans" = YES ] || exit 1
+
+case "$DISK" in *[0-9]) P=${DISK}p ;; *) P=$DISK ;; esac
+sgdisk --zap-all "$DISK"
+sgdisk -n1:0:+512M -t1:ef00 -c1:EFI -n2:0:0 -t2:8300 -c2:openVana "$DISK"
+mdev -s 2>/dev/null || udevadm settle
+mkfs.vfat -F32 -n VANAEFI "${P}1"
+mkfs.ext4 -F -L VANAROOT "${P}2"
+
+mkdir -p /mnt/vana
+mount "${P}2" /mnt/vana
+unsquashfs -f -d /mnt/vana "$SQFS"
+mkdir -p /mnt/vana/boot/efi
+mount "${P}1" /mnt/vana/boot/efi
+cp /media/openvana-live/boot/vmlinuz /media/openvana-live/boot/initramfs.img /mnt/vana/boot/efi/
+echo 'LABEL=VANAEFI /boot/efi vfat defaults 0 2' >> /mnt/vana/etc/fstab
+
+grub-install --target=x86_64-efi --efi-directory=/mnt/vana/boot/efi \
+    --boot-directory=/mnt/vana/boot/efi --removable --no-nvram
+cat > /mnt/vana/boot/efi/grub/grub.cfg <<'CFG'
+set timeout=0
+menuentry "openVana 1.0" {
+    search --no-floppy --label --set=root VANAEFI
+    linux /vmlinuz vana.root=LABEL=VANAROOT quiet loglevel=3
+    initrd /initramfs.img
+}
+CFG
+umount /mnt/vana/boot/efi /mnt/vana
+echo "openVana installed. Remove the USB stick and reboot."

@@ -1,0 +1,18 @@
+#!/bin/sh
+# One-time Android runtime setup (Waydroid) in TABLET mode.
+CFG=/var/lib/waydroid/waydroid.cfg
+[ -e "$CFG" ] && grep -q '^ro.build.characteristics = tablet' "$CFG" && exit 0
+
+if [ ! -e "$CFG" ]; then
+    # Uses the images baked into the ISO (/usr/share/waydroid-extra/images)
+    # when present, otherwise downloads LineageOS on first boot.
+    waydroid init || exit 0
+fi
+
+# Tablet profile: apps read ro.build.characteristics and the smallest screen
+# width (>= 600dp at density 160) and load their tablet (sw600dp) layouts.
+# multi_windows puts every Android app in its own desktop window.
+sed -i '/^\[properties\]/,$d' "$CFG"
+cat /etc/waydroid-extra/tablet.prop >> "$CFG"
+waydroid upgrade --offline
+rc-service waydroid-container restart

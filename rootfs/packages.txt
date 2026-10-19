@@ -1,0 +1,64 @@
+# openVana 1.0 — complete package list (Alpine Linux, musl, OpenRC).
+# Everything that is not needed for: booting, the desktop, Chromium,
+# Android apps (Waydroid) or Windows apps (Wine) is left out.
+
+# --- base system ---
+alpine-base
+eudev
+udev-init-scripts
+udev-init-scripts-openrc
+dbus
+dbus-openrc
+doas
+agetty
+kmod
+
+# --- graphics session: Wayland compositor + openVana shell runtime ---
+seatd
+seatd-openrc
+labwc
+xwayland
+mesa-dri-gallium
+mesa-va-gallium
+gtk+3.0
+gtk-layer-shell
+adwaita-icon-theme
+font-dejavu
+shared-mime-info
+xdg-utils
+
+# --- browser ---
+chromium
+
+# --- Android apps (APK) ---
+waydroid
+waydroid-openrc
+
+# --- Windows apps (EXE) ---
+wine
+
+# --- sound + network ---
+pipewire
+wireplumber
+pipewire-pulse
+pipewire-alsa
+iwd
+iwd-openrc
+dhcpcd
+dhcpcd-openrc
+
+# --- installer ---
+e2fsprogs
+dosfstools
+sgdisk
+squashfs-tools
+grub-efi
+
+# --- firmware (only GPU, Wi-Fi and common Ethernet; full linux-firmware is ~1 GB) ---
+linux-firmware-i915
+linux-firmware-amdgpu
+linux-firmware-intel
+linux-firmware-rtl_nic
+linux-firmware-rtw88
+linux-firmware-rtw89
+linux-firmware-mediatek

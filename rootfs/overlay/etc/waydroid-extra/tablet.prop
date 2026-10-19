@@ -1,0 +1,9 @@
+[properties]
+ro.build.characteristics = tablet
+ro.sf.lcd_density = 160
+persist.waydroid.multi_windows = true
+persist.waydroid.suspend = true
+ro.product.model = openVana Tablet
+ro.product.brand = openVana
+ro.product.manufacturer = openVana
+ro.product.device = vana_tablet

@@ -1,0 +1,43 @@
+#!/bin/busybox sh
+# openVana initramfs: find the root filesystem and switch to it.
+#  live:      ISO labelled OPENVANA -> squashfs (read-only) + tmpfs overlay
+#  installed: vana.root=LABEL=VANAROOT -> ext4
+/bin/busybox --install -s /bin
+mkdir -p /proc /sys /dev /media /lower /rw /newroot
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+
+rescue() { echo "openVana: $*"; exec sh; }
+ROOT=
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in vana.root=*) ROOT=${arg#vana.root=} ;; esac
+done
+
+find_dev() {
+    i=0
+    while [ $i -lt 30 ]; do
+        dev=$(findfs "$1" 2>/dev/null) && { echo "$dev"; return 0; }
+        i=$((i + 1)); sleep 1
+    done
+    return 1
+}
+
+if [ -n "$ROOT" ]; then
+    dev=$(find_dev "$ROOT") || rescue "root $ROOT not found"
+    mount -t ext4 -o rw "$dev" /newroot || rescue "cannot mount $dev"
+else
+    dev=$(find_dev LABEL=OPENVANA) || rescue "boot medium not found"
+    mount -t iso9660 -o ro "$dev" /media || rescue "cannot mount $dev"
+    mount -t squashfs -o ro,loop /media/openvana/rootfs.sqfs /lower || rescue "bad rootfs.sqfs"
+    mount -t tmpfs -o mode=755 tmpfs /rw
+    mkdir -p /rw/upper /rw/work
+    mount -t overlay overlay -o lowerdir=/lower,upperdir=/rw/upper,workdir=/rw/work /newroot \
+        || rescue "overlay failed"
+    mkdir -p /newroot/media/openvana-live
+    mount --move /media /newroot/media/openvana-live
+fi
+
+umount /proc /sys
+mount --move /dev /newroot/dev 2>/dev/null || umount /dev
+exec switch_root /newroot /sbin/init

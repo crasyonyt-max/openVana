@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Run Windows Program
+Exec=vana-exe %f
+MimeType=application/x-ms-dos-executable;application/x-msdownload;application/vnd.microsoft.portable-executable;application/x-msi;application/x-ms-installer;
+NoDisplay=true
