@@ -49,7 +49,7 @@ PRETTY_NAME="openVana 1.0"
 ID=openvana
 ID_LIKE=alpine
 VERSION_ID=1.0
-HOME_URL="https://github.com/openvana/openvana"
+HOME_URL="https://github.com/crasyonyt-max/openVana"
 OSR
 printf 'auto lo\niface lo inet loopback\n' > "$ROOT/etc/network/interfaces"
 
