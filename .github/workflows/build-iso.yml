@@ -15,22 +15,53 @@ concurrency:
 
 jobs:
   iso:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
+    defaults:
+      run:
+        working-directory: "1.0"
+    env:
+      RUN: docker run --rm -v ${{ github.workspace }}/1.0:/src openvana-build
     steps:
       - name: Free disk space
+        working-directory: /
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
 
       - uses: actions/checkout@v4
 
+      - name: Build environment
+        run: docker build -t openvana-build -f Containerfile . 2>&1 | tee -a build.log
+
+      - name: Restore VanaKernel
+        id: kcache
+        uses: actions/cache@v4
+        with:
+          path: 1.0/out/kernel
+          key: vanakernel-${{ hashFiles('1.0/kernel/**') }}
+
+      - name: Build VanaKernel
+        if: steps.kcache.outputs.cache-hit != 'true'
+        run: $RUN ./kernel/build-kernel.sh 2>&1 | tee -a build.log
+
+      - name: Build root filesystem
+        run: $RUN ./rootfs/build-rootfs.sh 2>&1 | tee -a build.log
+
       - name: Build ISO
-        run: make -C 1.0 iso ENGINE=docker
+        run: $RUN ./iso/build-iso.sh 2>&1 | tee -a build.log
+
+      - name: Report failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          { echo '### ISO build failed — last log lines'; echo '```'; tail -c 60000 build.log; echo '```'; } > comment.md
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/comments" -F body=@comment.md
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ISO=1.0/out/openvana-1.0-x86_64.iso
+          ISO=out/openvana-1.0-x86_64.iso
           sha256sum "$ISO" | sed 's#  .*/#  #' > "$ISO.sha256"
           gh release delete v1.0 --yes --cleanup-tag || true
           gh release create v1.0 "$ISO" "$ISO.sha256" \
