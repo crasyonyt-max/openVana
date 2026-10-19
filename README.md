@@ -1,6 +1,6 @@
 # openVana
 
-Open source operating system.
+The Open Source Version of soon releasing VanaOS.
 
 | Version | Folder |
 |---|---|
