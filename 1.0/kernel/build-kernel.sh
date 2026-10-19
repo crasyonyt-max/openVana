@@ -4,6 +4,9 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-$HERE/../out}
+# Default: newest 6.12 LTS release listed on kernel.org
+KVER=${KVER:-$(curl -fsSL https://www.kernel.org/releases.json \
+    | grep -o '"version": *"6\.12\.[0-9]*"' | grep -o '6\.12\.[0-9]*' | sort -V | tail -1)}
 KVER=${KVER:-6.12.50}
 SRC=$OUT/linux-$KVER
 

@@ -1,0 +1,38 @@
+name: Build openVana ISO
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["1.0/**", ".github/workflows/build-iso.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-iso
+  cancel-in-progress: true
+
+jobs:
+  iso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - uses: actions/checkout@v4
+
+      - name: Build ISO
+        run: make -C 1.0 iso ENGINE=docker
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ISO=1.0/out/openvana-1.0-x86_64.iso
+          sha256sum "$ISO" | sed 's#  .*/#  #' > "$ISO.sha256"
+          gh release delete v1.0 --yes --cleanup-tag || true
+          gh release create v1.0 "$ISO" "$ISO.sha256" \
+            --title "openVana 1.0" \
+            --notes "Bootable openVana 1.0 ISO (x86_64, BIOS + UEFI). Write it to a USB stick (e.g. with balenaEtcher or Rufus) and boot. Built from ${GITHUB_SHA::7}."
