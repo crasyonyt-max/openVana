@@ -27,7 +27,7 @@ static GtkWidget *clock_label;
 
 static const char *css =
     "window.vana-bg { background: #000000; }"
-    "window.vana-panel { background: rgba(10,10,10,0.92); }"
+    "window.vana-panel { background: #0a0a0a; }"
     "window.vana-menu { background: #101010; border: 1px solid #1f1f1f;"
     "  border-radius: 14px; }"
     "button.vana-start { padding: 4px; margin: 4px 6px; border: none;"
