@@ -224,7 +224,10 @@ static void on_search_changed(GtkEditable *e, gpointer d)
 
 static GtkWidget *action_button(const char *label, GCallback cb, gpointer data)
 {
-    GtkWidget *b = gtk_button_new_with_label(label);
+    /* labels ending in "-symbolic" are icon names */
+    GtkWidget *b = g_str_has_suffix(label, "-symbolic")
+        ? gtk_button_new_from_icon_name(label, GTK_ICON_SIZE_BUTTON)
+        : gtk_button_new_with_label(label);
     gtk_style_context_add_class(gtk_widget_get_style_context(b), "vana-action");
     g_signal_connect(b, "clicked", cb, data);
     return b;
@@ -277,10 +280,10 @@ static void build_menu(void)
                        action_button("Run EXE…", G_CALLBACK(on_run_exe), NULL),
                        FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(actions),
-                     action_button("⏻", G_CALLBACK(on_power), "poweroff"),
+                     action_button("system-shutdown-symbolic", G_CALLBACK(on_power), "poweroff"),
                      FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(actions),
-                     action_button("⟳", G_CALLBACK(on_power), "reboot"),
+                     action_button("system-reboot-symbolic", G_CALLBACK(on_power), "reboot"),
                      FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox), title, FALSE, FALSE, 0);

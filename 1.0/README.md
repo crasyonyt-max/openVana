@@ -4,6 +4,11 @@
 screen, a taskbar with the openVana start button, Chromium, and the ability to
 run **Android apps (APK, in tablet mode)** and **Windows programs (EXE/MSI)**.
 
+![openVana start menu](docs/start-menu.png)
+![Chromium on openVana](docs/chromium.png)
+
+**Download:** [openvana-1.0-x86_64.iso](https://github.com/crasyonyt-max/openVana/releases/latest) (about 500 MB)
+
 Licensed under the GNU GPL v3 (see `LICENSE`). The kernel remains GPL v2.
 
 ## What's inside
