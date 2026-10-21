@@ -29,6 +29,9 @@ depmod -b "$ROOT" "$KREL"
 # --- openVana shell + branding + overlay ---
 make -C "$TOP/shell" install DESTDIR="$ROOT"
 cp -a "$HERE/overlay/." "$ROOT/"
+# cp -a keeps the build user's ownership; system files must belong to root
+(cd "$HERE/overlay" && find . -mindepth 1) | while read -r f; do chown -h root:root "$ROOT/$f"; done
+chown root:root "$ROOT"
 sed -i "s/@KEYMAP@/$KEYMAP/" "$ROOT/etc/xdg/labwc/environment"
 
 # --- bundled APKs (put yours into ./apks/) ---
