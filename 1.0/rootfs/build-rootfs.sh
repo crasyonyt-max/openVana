@@ -60,6 +60,9 @@ for g in wheel video input audio seat netdev; do
     chroot "$ROOT" addgroup "$USERNAME" "$g" 2>/dev/null || true
 done
 chroot "$ROOT" passwd -d "$USERNAME" >/dev/null
+# no root logins; admin tasks go through doas (see /etc/doas.d/openvana.conf)
+chroot "$ROOT" passwd -l root >/dev/null
+printf 'openVana 1.0 - Kernel \\r on \\m (\\l)\n\n' > "$ROOT/etc/issue"
 sed -i "s|^tty1::.*|tty1::respawn:/sbin/agetty --autologin $USERNAME --noclear tty1 linux|" "$ROOT/etc/inittab"
 sed -i 's|^tty[3-6]::|#&|' "$ROOT/etc/inittab"
 

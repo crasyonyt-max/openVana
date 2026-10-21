@@ -37,5 +37,11 @@ menuentry "openVana 1.0" {
     initrd /initramfs.img
 }
 CFG
+# the live user has no password; the installed system must have one
+USERNAME=$(awk -F: '$3 == 1000 { print $1 }' /mnt/vana/etc/passwd)
+echo "Choose a password for $USERNAME:"
+until chroot /mnt/vana passwd "$USERNAME"; do :; done
+sed -i '/cmd vana-install/d' /mnt/vana/etc/doas.d/openvana.conf
+
 umount /mnt/vana/boot/efi /mnt/vana
 echo "openVana installed. Remove the USB stick and reboot."
