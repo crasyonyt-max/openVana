@@ -31,6 +31,8 @@ grub-install --target=x86_64-efi --efi-directory=/mnt/vana/boot/efi \
     --boot-directory=/mnt/vana/boot/efi --removable --no-nvram
 cat > /mnt/vana/boot/efi/grub/grub.cfg <<'CFG'
 set timeout=0
+insmod all_video
+set gfxpayload=keep
 menuentry "openVana 1.0" {
     search --no-floppy --label --set=root VANAEFI
     linux /vmlinuz vana.root=LABEL=VANAROOT quiet loglevel=3
