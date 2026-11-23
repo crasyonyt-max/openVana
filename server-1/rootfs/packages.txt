@@ -1,0 +1,79 @@
+# openVana Server 1.0 — package list (Debian 13 "trixie", stable).
+# Small, proven server set. ":i386" packages are 32-bit (for Windows programs).
+
+# --- base system ---
+systemd-sysv
+systemd-resolved
+dbus
+sudo
+locales
+tzdata
+console-setup
+keyboard-configuration
+kbd
+bash-completion
+ca-certificates
+less
+nano
+vim-tiny
+curl
+wget
+rsync
+htop
+lsof
+iproute2
+iputils-ping
+bind9-dnsutils
+whiptail
+man-db
+fastfetch
+
+# --- disks + boot ---
+parted
+gdisk
+e2fsprogs
+dosfstools
+squashfs-tools
+grub2-common
+grub-pc-bin
+grub-efi-amd64-bin
+efibootmgr
+initramfs-tools
+zstd
+live-boot
+plymouth
+plymouth-label
+
+# --- fallback kernel (Debian's own, gets Debian security updates) ---
+linux-image-amd64
+
+# --- firmware + CPU microcode (bug fixes for Intel/AMD processors) ---
+firmware-linux-free
+firmware-misc-nonfree
+firmware-realtek
+firmware-bnx2
+firmware-bnx2x
+intel-microcode
+amd64-microcode
+
+# --- server: remote access, security, reliability ---
+openssh-server
+ufw
+fail2ban
+python3-systemd
+unattended-upgrades
+chrony
+smartmontools
+nvme-cli
+
+# --- Windows programs (.exe / .msi) ---
+wine
+wine64
+wine32:i386
+wine-binfmt
+fonts-wine
+xvfb
+xauth
+
+# --- startup sound ---
+alsa-utils

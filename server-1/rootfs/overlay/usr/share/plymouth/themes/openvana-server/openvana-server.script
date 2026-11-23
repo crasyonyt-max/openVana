@@ -1,0 +1,79 @@
+# openVana Server 1.0 boot screen: classic 4:3 splash with a scrolling bar.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+
+splash = Image("splash.png");
+scale = Math.Min(screen_w / splash.GetWidth(), screen_h / splash.GetHeight());
+splash_w = Math.Int(splash.GetWidth() * scale);
+splash_h = Math.Int(splash.GetHeight() * scale);
+left = Math.Int((screen_w - splash_w) / 2);
+top = Math.Int((screen_h - splash_h) / 2);
+
+background = Sprite(splash.Scale(splash_w, splash_h));
+background.SetPosition(left, top, 0);
+
+# bar: one seamless period, repeated and scrolled to the left
+bar_src = Image("bar.png");
+bar_w = Math.Int(bar_src.GetWidth() * scale);
+bar_h = Math.Int(bar_src.GetHeight() * scale);
+if (bar_w < 1) bar_w = 1;
+if (bar_h < 1) bar_h = 1;
+bar_image = bar_src.Scale(bar_w, bar_h);
+bar_count = Math.Int(splash_w / bar_w) + 2;
+for (i = 0; i < bar_count; i++)
+  bars[i] = Sprite(bar_image);
+
+# black masks hide the bar where it runs past a 4:3 picture on wide screens
+black = Image("black.png");
+if (left > 0) {
+  mask_left = Sprite(black.Scale(left, bar_h));
+  mask_left.SetPosition(0, top + splash_h - bar_h, 20);
+  mask_right = Sprite(black.Scale(screen_w - left - splash_w + 1, bar_h));
+  mask_right.SetPosition(left + splash_w, top + splash_h - bar_h, 20);
+}
+
+offset = 0;
+fun refresh_callback() {
+  offset = offset + Math.Max(1, Math.Int(3 * scale));
+  while (offset >= bar_w) offset = offset - bar_w;
+  for (i = 0; i < bar_count; i++)
+    bars[i].SetPosition(left + i * bar_w - offset, top + splash_h - bar_h, 10);
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# ---- prompts (disk passwords, questions) so boot never hangs invisibly ----
+prompt_sprite = Sprite();
+entry_sprite = Sprite();
+fun show_prompt(text, bullets) {
+  prompt_image = Image.Text(text, 1, 1, 1);
+  prompt_sprite.SetImage(prompt_image);
+  prompt_sprite.SetPosition(Math.Int((screen_w - prompt_image.GetWidth()) / 2), top + Math.Int(splash_h * 0.72), 30);
+  entry_image = Image.Text(bullets, 1, 1, 1);
+  entry_sprite.SetImage(entry_image);
+  entry_sprite.SetPosition(Math.Int((screen_w - entry_image.GetWidth()) / 2), top + Math.Int(splash_h * 0.72) + 30, 30);
+}
+fun display_password_callback(prompt, bullets) {
+  stars = "";
+  for (i = 0; i < bullets; i++) stars = stars + "*";
+  show_prompt(prompt, stars);
+}
+fun display_question_callback(prompt, entry) { show_prompt(prompt, entry); }
+fun display_normal_callback() {
+  prompt_sprite.SetImage(Image.Text("", 1, 1, 1));
+  entry_sprite.SetImage(Image.Text("", 1, 1, 1));
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+message_sprite = Sprite();
+fun message_callback(text) {
+  message_image = Image.Text(text, 1, 1, 1);
+  message_sprite.SetImage(message_image);
+  message_sprite.SetPosition(Math.Int((screen_w - message_image.GetWidth()) / 2), top + Math.Int(splash_h * 0.85), 30);
+}
+Plymouth.SetMessageFunction(message_callback);

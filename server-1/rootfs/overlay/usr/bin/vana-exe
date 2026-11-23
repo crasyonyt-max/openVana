@@ -1,0 +1,15 @@
+#!/bin/sh
+# vana-exe — run a Windows program (.exe / .msi) on openVana Server with Wine.
+# Works without a screen: GUI programs then get an invisible virtual display.
+set -eu
+[ $# -ge 1 ] || { echo "usage: vana-exe <program.exe|installer.msi> [arguments]" >&2; exit 2; }
+export WINEDEBUG="${WINEDEBUG:--all}"
+export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-mscoree,mshtml=}"   # no Mono/Gecko download prompts
+case "$1" in
+    *.msi|*.MSI) set -- msiexec /i "$@" ;;
+esac
+if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    # keep the virtual display until Wine's background processes have finished too
+    exec xvfb-run -a sh -c 'wine "$@"; status=$?; wineserver -w; exit $status' vana-exe "$@"
+fi
+exec wine "$@"

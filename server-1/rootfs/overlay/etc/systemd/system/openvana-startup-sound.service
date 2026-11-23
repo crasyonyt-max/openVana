@@ -1,0 +1,13 @@
+[Unit]
+Description=openVana startup sound
+After=sound.target
+ConditionPathExistsGlob=/dev/snd/pcmC*D*p
+
+[Service]
+Type=oneshot
+# "-" : a missing or busy sound card never counts as a failed boot
+ExecStart=-/usr/bin/aplay -q /usr/share/openvana/startup.wav
+TimeoutStartSec=20
+
+[Install]
+WantedBy=multi-user.target

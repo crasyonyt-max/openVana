@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=openVana Server
+Description=Classic openVana Server 1.0 boot screen
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/openvana-server
+ScriptFile=/usr/share/plymouth/themes/openvana-server/openvana-server.script

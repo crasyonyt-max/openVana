@@ -1,0 +1,18 @@
+#!/bin/sh
+# openVana Server login banner with the most useful facts about this machine.
+. /etc/os-release
+ips=$(ip -o -4 addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | paste -sd ' ')
+case "$(uname -r)" in
+    *-vanakernel-hydra) kernel="VanaKernel Hydra $(uname -r | sed 's/-vanakernel-hydra$//')" ;;
+    *)                  kernel="Debian kernel $(uname -r) (fallback)" ;;
+esac
+printf '\n  \033[1;32mopen\033[1;37mVana\033[0m Server %s   (%s)\n\n' "${VERSION:-}" "$kernel"
+printf '  IP address:  %s\n' "${ips:-none (no network)}"
+printf '  Uptime:      %s\n' "$(uptime -p 2>/dev/null | sed 's/^up //')"
+printf '  Load:        %s\n' "$(cut -d' ' -f1-3 /proc/loadavg)"
+printf '  Memory:      %s\n' "$(free -h | awk '/^Mem:/ {print $3 " used of " $2}')"
+printf '  Disk (/):    %s\n' "$(df -h / | awk 'NR==2 {print $3 " used of " $2 " (" $5 ")"}')"
+if [ -e /run/live/medium ]; then
+    printf '\n  Live system. Install to a disk with:  \033[1msudo vana-install\033[0m\n'
+fi
+echo

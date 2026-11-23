@@ -1,0 +1,158 @@
+#!/bin/bash
+# vana-install — install openVana Server 1.0 from the live system to a disk.
+# Text-mode wizard (works on the console and over SSH). Erases the chosen disk.
+set -euo pipefail
+
+TITLE="openVana Server 1.0 - Installer"
+SQFS=/run/live/medium/live/filesystem.squashfs
+TARGET=/mnt/openvana-target
+DEBS=/usr/share/openvana/debs
+
+[ "$(id -u)" = 0 ] || exec sudo "$0" "$@"
+[ -f "$SQFS" ] || { echo "vana-install: run this from the openVana Server live system."; exit 1; }
+# Work in a private mount namespace: the target disk's mounts stay invisible to running
+# services (which would otherwise keep the disk busy) and vanish when the installer exits.
+if [ -z "${VANA_INSTALL_NS:-}" ]; then
+    export VANA_INSTALL_NS=1
+    exec unshare --mount --propagation private "$0" "$@"
+fi
+
+ask()      { whiptail --title "$TITLE" "$@" 3>&1 1>&2 2>&3; }
+die()      { whiptail --title "$TITLE" --msgbox "Installation failed:\n\n$*" 12 70; exit 1; }
+progress() { printf "XXX\n%s\n%s\nXXX\n" "$1" "$2" >&3; }   # fd 3 = progress bar
+
+# ---------------------------------------------------------------- questions
+live_disk=$(lsblk -no PKNAME "$(findmnt -no SOURCE /run/live/medium)" 2>/dev/null || true)
+menu=()
+while read -r name size model; do
+    [ "$(basename "$name")" = "$live_disk" ] && continue
+    menu+=("$name" "$size ${model:-disk}")
+done < <(lsblk -dnpo NAME,SIZE,MODEL -e 1,2,7,11)
+[ ${#menu[@]} -gt 0 ] || die "No disk found to install to."
+
+DISK=$(ask --menu "Install openVana Server on which disk?\n\nEVERYTHING on that disk will be erased." 18 70 8 "${menu[@]}") || exit 1
+HOST=$(ask --inputbox "Computer name (hostname):" 9 60 "openvana-server") || exit 1
+USERNAME=$(ask --inputbox "Administrator user name (for login and SSH):" 9 60 "admin") || exit 1
+[[ "$USERNAME" =~ ^[a-z_][a-z0-9_-]{0,30}$ ]] || die "User name may only contain a-z, 0-9, - and _."
+while :; do
+    PW1=$(ask --passwordbox "Password for $USERNAME:" 9 60) || exit 1
+    PW2=$(ask --passwordbox "Repeat the password:" 9 60) || exit 1
+    [ -n "$PW1" ] && [ "$PW1" = "$PW2" ] && break
+    whiptail --title "$TITLE" --msgbox "The passwords were empty or did not match. Please try again." 8 60
+done
+KEYMAP=$(ask --menu "Keyboard layout:" 15 60 6 de "German" us "English (US)" gb "English (UK)" fr "French" ch "Swiss" at "Austrian") || exit 1
+TZONE=$(ask --inputbox "Time zone (Region/City):" 9 60 "Europe/Berlin") || exit 1
+[ -e "/usr/share/zoneinfo/$TZONE" ] || die "Unknown time zone: $TZONE"
+
+ask --yesno "Ready to install.\n\nDisk:      $DISK  (will be ERASED)\nHostname:  $HOST\nUser:      $USERNAME\nKeyboard:  $KEYMAP\nTime zone: $TZONE\n\nContinue?" 16 64 || exit 1
+
+if [ -d /sys/firmware/efi ]; then UEFI=1; else UEFI=0; fi
+case "$DISK" in *[0-9]) P="${DISK}p" ;; *) P="$DISK" ;; esac
+LOG=/var/log/vana-install.log
+
+# ---------------------------------------------------------------- install
+install_system() {
+    progress 2 "Partitioning $DISK ..."
+    swapoff -a || true
+    umount -R "$TARGET" 2>/dev/null || true
+    wipefs -af "$DISK"
+    sgdisk --zap-all "$DISK"
+    if [ $UEFI = 1 ]; then
+        sgdisk -n1:0:+512M -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:openvana-root "$DISK"
+    else
+        sgdisk -n1:0:+1M -t1:ef02 -c1:bios-boot -n2:0:0 -t2:8300 -c2:openvana-root "$DISK"
+    fi
+    partprobe "$DISK" || true
+    udevadm settle
+    sleep 1
+
+    progress 6 "Creating file systems ..."
+    mkfs.ext4 -q -F -L openvana-root "${P}2"
+    mkdir -p "$TARGET"
+    mount "${P}2" "$TARGET"
+    if [ $UEFI = 1 ]; then
+        mkfs.vfat -F32 -n EFI "${P}1" >/dev/null
+        mkdir -p "$TARGET/boot/efi"
+        mount "${P}1" "$TARGET/boot/efi"
+    fi
+
+    progress 10 "Copying openVana Server to the disk (this takes a few minutes) ..."
+    unsquashfs -f -q -n -d "$TARGET" "$SQFS"
+
+    progress 70 "Configuring the system ..."
+    for d in dev dev/pts proc sys run; do mount --rbind "/$d" "$TARGET/$d"; mount --make-rslave "$TARGET/$d"; done
+
+    # live-only pieces: autologin, password-less sudo, live-boot
+    rm -f "$TARGET/etc/systemd/system/getty@tty1.service.d/autologin.conf" \
+          "$TARGET/etc/sudoers.d/openvana-live"
+    chroot "$TARGET" env DEBIAN_FRONTEND=noninteractive apt-get purge -y -q live-boot live-boot-initramfs-tools
+
+    # user: rename the live user and set the password
+    if [ "$USERNAME" != vana ]; then
+        chroot "$TARGET" usermod -l "$USERNAME" -d "/home/$USERNAME" -m vana
+        chroot "$TARGET" groupmod -n "$USERNAME" vana
+        chroot "$TARGET" usermod -c "$USERNAME" "$USERNAME"
+    fi
+    echo "$USERNAME:$PW1" | chroot "$TARGET" chpasswd
+
+    echo "$HOST" > "$TARGET/etc/hostname"
+    sed -i "s/^127\.0\.1\.1.*/127.0.1.1\t$HOST/" "$TARGET/etc/hosts"
+    ln -sf "/usr/share/zoneinfo/$TZONE" "$TARGET/etc/localtime"
+    echo "$TZONE" > "$TARGET/etc/timezone"
+    sed -i "s/^XKBLAYOUT=.*/XKBLAYOUT=\"$KEYMAP\"/" "$TARGET/etc/default/keyboard"
+
+    # fstab + swap file (half the RAM, between 1 and 4 GB)
+    root_uuid=$(blkid -s UUID -o value "${P}2")
+    {
+        echo "# openVana Server"
+        echo "UUID=$root_uuid  /  ext4  errors=remount-ro  0  1"
+        [ $UEFI = 1 ] && echo "UUID=$(blkid -s UUID -o value "${P}1")  /boot/efi  vfat  umask=0077  0  1"
+        echo "/swapfile  none  swap  sw  0  0"
+    } > "$TARGET/etc/fstab"
+    mem_gb=$(( ($(awk '/MemTotal/ {print $2}' /proc/meminfo) / 1024 / 1024 + 1) / 2 ))
+    swap_gb=$(( mem_gb < 1 ? 1 : (mem_gb > 4 ? 4 : mem_gb) ))
+    fallocate -l "${swap_gb}G" "$TARGET/swapfile"
+    chmod 600 "$TARGET/swapfile"
+    mkswap -q "$TARGET/swapfile"
+
+    progress 80 "Installing the boot loader ..."
+    if [ $UEFI = 1 ]; then
+        chroot "$TARGET" sh -c "echo 'grub-efi-amd64 grub2/force_efi_extra_removable boolean true' | debconf-set-selections"
+        chroot "$TARGET" env DEBIAN_FRONTEND=noninteractive sh -c "dpkg -i $DEBS/grub-efi/*.deb"
+        chroot "$TARGET" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=openvana --recheck
+        # second copy at the fallback path, for firmware that forgets boot entries
+        chroot "$TARGET" grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --no-nvram
+    else
+        chroot "$TARGET" sh -c "echo 'grub-pc grub-pc/install_devices multiselect $DISK' | debconf-set-selections"
+        chroot "$TARGET" env DEBIAN_FRONTEND=noninteractive sh -c "dpkg -i $DEBS/grub-pc/*.deb"
+        chroot "$TARGET" grub-install --target=i386-pc "$DISK"
+    fi
+
+    # boot VanaKernel Hydra by default; the Debian kernel stays in the menu as fallback
+    hydra=$(cd "$TARGET/boot" && ls vmlinuz-*-vanakernel-hydra 2>/dev/null | sed "s/^vmlinuz-//" | sort -V | tail -1 || true)
+    if [ -n "$hydra" ]; then
+        echo "GRUB_DEFAULT=\"gnulinux-$hydra-advanced-$root_uuid\"" > "$TARGET/etc/default/grub.d/10-default-kernel.cfg"
+    fi
+
+    progress 88 "Preparing the first start ..."
+    chroot "$TARGET" update-initramfs -u -k all
+    chroot "$TARGET" update-grub
+
+    progress 98 "Finishing ..."
+    sync
+    umount -R "$TARGET"
+    progress 100 "Done."
+}
+
+# Run in its own subshell with errexit on (inside "if" bash would silently ignore it).
+# Progress goes to the gauge on fd 3; all command output goes to the log.
+set +e
+( set -euo pipefail; install_system ) 3>&1 >>"$LOG" 2>&1 | whiptail --title "$TITLE" --gauge "Starting ..." 8 70 0
+status=${PIPESTATUS[0]}
+set -e
+if [ "$status" != 0 ]; then
+    umount -R "$TARGET" 2>/dev/null || true
+    die "A step failed (code $status). Details: $LOG\n\n$(tail -n 5 "$LOG")"
+fi
+
+whiptail --title "$TITLE" --msgbox "openVana Server is installed.\n\nRemove the USB stick / ISO and restart:\n\n    sudo reboot\n\nAfter the restart, log in as \"$USERNAME\" (also via SSH)." 14 64

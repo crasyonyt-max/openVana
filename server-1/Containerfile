@@ -1,0 +1,9 @@
+# Build environment for openVana Server (Debian, so packages match the target).
+FROM debian:trixie
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential bc bison flex libssl-dev libelf-dev kmod cpio rsync debhelper dpkg-dev \
+    python3 zstd xz-utils curl ca-certificates \
+    mmdebstrap squashfs-tools xorriso grub-common grub-pc-bin grub-efi-amd64-bin mtools dosfstools \
+    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update   # package lists are needed to fetch Debian's kernel config
+WORKDIR /src

@@ -1,0 +1,18 @@
+# Installs Google Chrome once, on the first start of an installed system with
+# internet. Without internet it simply tries again at the next start.
+[Unit]
+Description=Install Google Chrome (first start)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=!/var/lib/openvana/chrome-installed
+ConditionPathExists=!/run/live/medium
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/vana-get-chrome
+ExecStartPost=/usr/bin/touch /var/lib/openvana/chrome-installed
+StateDirectory=openvana
+TimeoutStartSec=15min
+
+[Install]
+WantedBy=multi-user.target

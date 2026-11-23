@@ -1,0 +1,22 @@
+#!/bin/bash
+# vana-get-chrome — install Google Chrome from Google's official .deb.
+# Google's license doesn't allow shipping Chrome inside the openVana ISO, so it is
+# downloaded from Google. Google's package then sets up Google's own update
+# repository, and unattended-upgrades keeps it up to date.
+set -euo pipefail
+[ "$(id -u)" = 0 ] || exec sudo "$0" "$@"
+
+if dpkg -s google-chrome-stable >/dev/null 2>&1; then
+    echo "Google Chrome is already installed: $(google-chrome --version 2>/dev/null || true)"
+    exit 0
+fi
+deb=/var/cache/openvana/google-chrome-stable_current_amd64.deb
+mkdir -p "${deb%/*}"
+echo "Downloading Google Chrome from dl.google.com ..."
+curl -fsSL --retry 3 --connect-timeout 20 -o "$deb" \
+    https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+apt-get -o DPkg::Lock::Timeout=600 update -q
+DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y -q "$deb"
+rm -f "$deb"
+echo "Google Chrome installed: $(google-chrome --version)"
+echo "On a server without a screen, use it headless, e.g.:  google-chrome --headless --screenshot https://example.com"

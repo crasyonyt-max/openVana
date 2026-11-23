@@ -1,0 +1,4 @@
+// Besides Debian's security updates, also install Google Chrome updates automatically.
+Unattended-Upgrade::Origins-Pattern {
+        "origin=Google LLC,suite=stable";
+};

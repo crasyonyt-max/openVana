@@ -1,0 +1,10 @@
+# openVana Server: every wired network card gets an address by DHCP (IPv4 + IPv6).
+# For a fixed address, see /usr/share/doc/openvana/README (section "Static IP").
+[Match]
+Name=en* eth*
+
+[Network]
+DHCP=yes
+
+[DHCPv4]
+UseDomains=yes
