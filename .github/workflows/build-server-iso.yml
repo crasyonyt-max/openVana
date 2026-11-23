@@ -38,7 +38,7 @@ jobs:
 
       - name: Restore VanaKernel Hydra
         id: kcache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: server-1/out/kernel
           key: vanakernel-hydra-${{ hashFiles('server-1/kernel/**') }}
@@ -48,6 +48,14 @@ jobs:
         run: |
           $RUN ./kernel/build-kernel.sh 2>&1 | tee -a build.log | grep -vE '^\s+(CC|LD|AR|AS|GEN|HOSTCC|CHK|UPD|OBJCOPY|MKCAP|SIGN|ZSTD|STRIP|INSTALL|BTF|SYNC|POLICY|CERT|EXTRACT|DESCEND|VDSO|SYSHDR|SYSTBL|WRAP|COPY|HDRINST|HYPERCALLS|LDS|RELOCS|SORTTAB|MODPOST|CC \[M\]|LD \[M\]) '
           sudo rm -rf out/linux-*/   # source tree no longer needed, frees disk space
+
+      # saved right away, so a failure in a later step doesn't lose the long kernel build
+      - name: Save VanaKernel Hydra
+        if: steps.kcache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: server-1/out/kernel
+          key: vanakernel-hydra-${{ hashFiles('server-1/kernel/**') }}
 
       - name: Build root filesystem
         run: $RUN ./rootfs/build-rootfs.sh 2>&1 | tee -a build.log

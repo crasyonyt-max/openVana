@@ -105,7 +105,7 @@ ln -sf /dev/null "$ROOT/etc/systemd/system-generators/systemd-ssh-generator"
 
 echo "==> services"
 in_root systemctl enable systemd-networkd systemd-resolved ssh ufw fail2ban chrony \
-    fstrim.timer openvana-startup-sound.service openvana-chrome-firstboot.service
+    fstrim.timer openvana-startup-sound.service openvana-chrome-firstboot.timer
 in_root ufw allow OpenSSH >/dev/null
 sed -i 's/^ENABLED=.*/ENABLED=yes/' "$ROOT/etc/ufw/ufw.conf"     # firewall on: only SSH is open
 

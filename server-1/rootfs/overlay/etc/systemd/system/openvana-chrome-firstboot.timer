@@ -1,0 +1,10 @@
+[Unit]
+Description=Install Google Chrome once internet is available
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=6h
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target
