@@ -1,5 +1,5 @@
 /*
- * vana-shell — the openVana 1.0 desktop shell.
+ * vana-shell — the openVana Base 1 desktop shell.
  *
  * Draws a black background, a bottom panel with the openVana start button
  * and a clock, and a start menu listing every installed application
@@ -252,7 +252,7 @@ static void build_menu(void)
                      G_CALLBACK(gtk_widget_hide_on_delete), NULL);
 
     GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    GtkWidget *title = gtk_label_new("openVana 1.0");
+    GtkWidget *title = gtk_label_new("openVana Base 1");
     gtk_label_set_xalign(GTK_LABEL(title), 0);
     gtk_style_context_add_class(gtk_widget_get_style_context(title), "vana-title");
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# vana-install — install openVana 1.0 from the live system to a disk (UEFI).
+# vana-install — install openVana Base 1 from the live system to a disk (UEFI).
 #   doas vana-install /dev/nvme0n1
 # WARNING: erases the whole target disk.
 set -eu
@@ -33,7 +33,7 @@ cat > /mnt/vana/boot/efi/grub/grub.cfg <<'CFG'
 set timeout=0
 insmod all_video
 set gfxpayload=keep
-menuentry "openVana 1.0" {
+menuentry "openVana Base 1" {
     search --no-floppy --label --set=root VANAEFI
     linux /vmlinuz vana.root=LABEL=VANAROOT quiet loglevel=3
     initrd /initramfs.img

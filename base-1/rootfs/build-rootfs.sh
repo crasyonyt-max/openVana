@@ -49,10 +49,13 @@ fi
 echo openvana > "$ROOT/etc/hostname"
 cat > "$ROOT/etc/os-release" <<OSR
 NAME="openVana"
-PRETTY_NAME="openVana 1.0"
+PRETTY_NAME="openVana Base 1"
 ID=openvana
 ID_LIKE=alpine
-VERSION_ID=1.0
+VERSION_ID=1
+VERSION="Base 1"
+VARIANT="Base"
+VARIANT_ID=base
 HOME_URL="https://github.com/crasyonyt-max/openVana"
 OSR
 printf 'auto lo\niface lo inet loopback\n' > "$ROOT/etc/network/interfaces"
@@ -65,7 +68,7 @@ done
 chroot "$ROOT" passwd -d "$USERNAME" >/dev/null
 # no root logins; admin tasks go through doas (see /etc/doas.d/openvana.conf)
 chroot "$ROOT" passwd -l root >/dev/null
-printf 'openVana 1.0 - Kernel \\r on \\m (\\l)\n\n' > "$ROOT/etc/issue"
+printf 'openVana Base 1 - Kernel \\r on \\m (\\l)\n\n' > "$ROOT/etc/issue"
 sed -i "s|^tty1::.*|tty1::respawn:/sbin/agetty --autologin $USERNAME --noclear tty1 linux|" "$ROOT/etc/inittab"
 sed -i 's|^tty[3-6]::|#&|' "$ROOT/etc/inittab"
 

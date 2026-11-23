@@ -4,7 +4,7 @@ set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-$HERE/../out}
 ISO=$OUT/isodir
-NAME=${NAME:-openvana-1.0-x86_64.iso}
+NAME=${NAME:-openvana-base-1-x86_64.iso}
 
 rm -rf "$ISO" "$OUT/initramfs"; mkdir -p "$ISO/boot/grub" "$ISO/openvana" "$OUT/initramfs/bin"
 

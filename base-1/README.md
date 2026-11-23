@@ -1,4 +1,4 @@
-# openVana 1.0
+# openVana Base 1
 
 **Open source operating system.** A deliberately tiny desktop OS: a black
 screen, a taskbar with the openVana start button, Chromium, and the ability to
@@ -7,7 +7,7 @@ run **Android apps (APK, in tablet mode)** and **Windows programs (EXE/MSI)**.
 ![openVana start menu](docs/start-menu.png)
 ![Chromium on openVana](docs/chromium.png)
 
-**Download:** [openvana-1.0-x86_64.iso](https://github.com/crasyonyt-max/openVana/releases/latest) (about 500 MB)
+**Download:** [openvana-base-1-x86_64.iso](https://github.com/crasyonyt-max/openVana/releases/latest) (about 500 MB)
 
 Licensed under the GNU GPL v3 (see `LICENSE`). The kernel remains GPL v2.
 
@@ -31,7 +31,7 @@ Needs Docker or Podman and about 15 GB of free disk space. Builds run inside an 
 
 ```sh
 cp ~/Downloads/your-app.apk apks/     # APKs to ship with the OS (optional)
-make                                  # -> out/openvana-1.0-x86_64.iso
+make                                  # -> out/openvana-base-1-x86_64.iso
 make run                              # try it in QEMU
 ```
 

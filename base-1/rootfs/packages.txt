@@ -1,4 +1,4 @@
-# openVana 1.0 — complete package list (Alpine Linux, musl, OpenRC).
+# openVana Base 1 — complete package list (Alpine Linux, musl, OpenRC).
 # Everything that is not needed for: booting, the desktop, Chromium,
 # Android apps (Waydroid) or Windows apps (Wine) is left out.
 

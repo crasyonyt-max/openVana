@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["1.0/**", ".github/workflows/build-iso.yml"]
+    paths: ["base-1/**", ".github/workflows/build-iso.yml"]
 
 permissions:
   contents: write
@@ -20,9 +20,9 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: "1.0"
+        working-directory: "base-1"
     env:
-      RUN: docker run --rm -v ${{ github.workspace }}/1.0:/src openvana-build
+      RUN: docker run --rm -v ${{ github.workspace }}/base-1:/src openvana-build
     steps:
       - name: Free disk space
         working-directory: /
@@ -37,8 +37,8 @@ jobs:
         id: kcache
         uses: actions/cache@v4
         with:
-          path: 1.0/out/kernel
-          key: vanakernel-${{ hashFiles('1.0/kernel/**') }}
+          path: base-1/out/kernel
+          key: vanakernel-${{ hashFiles('base-1/kernel/**') }}
 
       - name: Build VanaKernel
         if: steps.kcache.outputs.cache-hit != 'true'
@@ -55,13 +55,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           sudo chown -R "$(id -u):$(id -g)" out
-          ISO=out/openvana-1.0-x86_64.iso
+          ISO=out/openvana-base-1-x86_64.iso
           ls -lh "$ISO" | tee -a build.log
-          (cd out && sha256sum openvana-1.0-x86_64.iso > openvana-1.0-x86_64.iso.sha256)
-          gh release delete v1.0 --yes --cleanup-tag 2>&1 | tee -a build.log || true
-          gh release create v1.0 "$ISO" "$ISO.sha256" \
-            --title "openVana 1.0" \
-            --notes "Bootable openVana 1.0 ISO (x86_64, BIOS + UEFI). Write it to a USB stick (e.g. with balenaEtcher or Rufus) and boot. Built from ${GITHUB_SHA::7}." 2>&1 | tee -a build.log
+          (cd out && sha256sum openvana-base-1-x86_64.iso > openvana-base-1-x86_64.iso.sha256)
+          gh release delete base-1 --yes --cleanup-tag 2>&1 | tee -a build.log || true
+          gh release create base-1 "$ISO" "$ISO.sha256" \
+            --title "openVana Base 1" \
+            --notes "Bootable openVana Base 1 ISO (x86_64, BIOS + UEFI). Write it to a USB stick (e.g. with balenaEtcher or Rufus) and boot. Built from ${GITHUB_SHA::7}." 2>&1 | tee -a build.log
 
       - name: Report failure
         if: failure()

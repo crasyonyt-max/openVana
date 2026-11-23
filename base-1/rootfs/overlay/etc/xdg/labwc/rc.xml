@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- openVana 1.0 window manager settings (labwc) -->
+<!-- openVana Base 1 window manager settings (labwc) -->
 <labwc_config>
   <core><decoration>server</decoration><gap>0</gap></core>
   <theme>
