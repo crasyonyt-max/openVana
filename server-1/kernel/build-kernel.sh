@@ -28,7 +28,8 @@ cd "$SRC"
 scripts/kconfig/merge_config.sh -m .config "$HERE/hydra.config"
 make olddefconfig
 # make sure the important choices survived olddefconfig
-for opt in 'CONFIG_LOCALVERSION="-vanakernel-hydra"' '# CONFIG_SMB_SERVER is not set' 'CONFIG_DRM_SIMPLEDRM=y'; do
+for opt in 'CONFIG_LOCALVERSION="-vanakernel-hydra"' '# CONFIG_SMB_SERVER is not set' \
+           '# CONFIG_STAGING is not set' 'CONFIG_DEBUG_INFO_NONE=y' 'CONFIG_DRM_BOCHS=m'; do
     grep -qx "$opt" .config || { echo "config check failed: $opt"; exit 1; }
 done
 

@@ -29,7 +29,7 @@ hardware support. On top of that it applies the VanaKernel changes
 
 - **No KSMBD:** the in-kernel SMB server is switched off (security).
 - **No staging or media drivers:** drivers that the kernel itself marks as not yet stable (staging) and the TV/webcam media stack are left out.
-- **A screen on every machine:** generic graphics (simpledrm) plus the QEMU and Limbo emulator graphics drivers.
+- **Graphics:** Debian's proven framebuffer console, plus the QEMU and Limbo emulator graphics drivers.
 - **No debug info:** smaller and faster to build.
 
 ### Stability and security
