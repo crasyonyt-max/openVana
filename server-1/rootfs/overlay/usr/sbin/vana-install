@@ -7,6 +7,7 @@ TITLE="openVana Server 1.0 - Installer"
 SQFS=/run/live/medium/live/filesystem.squashfs
 TARGET=/mnt/openvana-target
 DEBS=/usr/share/openvana/debs
+POOL=/run/live/medium/pool/gnome      # GNOME packages on the ISO (offline install)
 
 [ "$(id -u)" = 0 ] || exec sudo "$0" "$@"
 [ -f "$SQFS" ] || { echo "vana-install: run this from the openVana Server live system."; exit 1; }
@@ -43,8 +44,11 @@ done
 KEYMAP=$(ask --menu "Keyboard layout:" 15 60 6 de "German" us "English (US)" gb "English (UK)" fr "French" ch "Swiss" at "Austrian") || exit 1
 TZONE=$(ask --inputbox "Time zone (Region/City):" 9 60 "Europe/Berlin") || exit 1
 [ -e "/usr/share/zoneinfo/$TZONE" ] || die "Unknown time zone: $TZONE"
+SOFTWARE=$(ask --separate-output --checklist "Software selection\n\nSpace = select / deselect, Enter = continue.\nWithout a desktop, the server runs in text mode (managed via SSH)." 13 72 1 \
+    gnome "GNOME desktop (graphical interface + login screen)" ON) || exit 1
+if grep -qx gnome <<<"$SOFTWARE"; then GNOME=1; DESKTOP="GNOME"; else GNOME=0; DESKTOP="none (text mode)"; fi
 
-ask --yesno "Ready to install.\n\nDisk:      $DISK  (will be ERASED)\nHostname:  $HOST\nUser:      $USERNAME\nKeyboard:  $KEYMAP\nTime zone: $TZONE\n\nContinue?" 16 64 || exit 1
+ask --yesno "Ready to install.\n\nDisk:      $DISK  (will be ERASED)\nHostname:  $HOST\nUser:      $USERNAME\nKeyboard:  $KEYMAP\nTime zone: $TZONE\nDesktop:   $DESKTOP\n\nContinue?" 17 64 || exit 1
 
 if [ -d /sys/firmware/efi ]; then UEFI=1; else UEFI=0; fi
 case "$DISK" in *[0-9]) P="${DISK}p" ;; *) P="$DISK" ;; esac
@@ -101,6 +105,29 @@ install_system() {
     echo "$TZONE" > "$TARGET/etc/timezone"
     sed -i "s/^XKBLAYOUT=.*/XKBLAYOUT=\"$KEYMAP\"/" "$TARGET/etc/default/keyboard"
 
+    if [ $GNOME = 1 ]; then
+        progress 72 "Installing the GNOME desktop (this takes a while) ..."
+        printf '#!/bin/sh\nexit 101\n' > "$TARGET/usr/sbin/policy-rc.d"   # don't start services in the chroot
+        chmod +x "$TARGET/usr/sbin/policy-rc.d"
+        if ls "$POOL"/*.deb >/dev/null 2>&1; then
+            mkdir -p "$TARGET/var/cache/openvana-gnome"
+            cp "$POOL"/*.deb "$TARGET/var/cache/openvana-gnome/"
+            chroot "$TARGET" env DEBIAN_FRONTEND=noninteractive sh -c \
+                'apt-get install -y -q --no-install-recommends /var/cache/openvana-gnome/*.deb'
+            rm -r "$TARGET/var/cache/openvana-gnome"
+        else
+            # packages not reachable (e.g. booted "into RAM" and the USB stick removed): download
+            chroot "$TARGET" env DEBIAN_FRONTEND=noninteractive sh -c \
+                'apt-get update -q && apt-get install -y -q gnome-core network-manager'
+        fi
+        rm -f "$TARGET/usr/sbin/policy-rc.d"
+        # NetworkManager takes over the network cable (GNOME shows and configures it);
+        # two network services on one cable would fight, so systemd-networkd is switched off
+        chroot "$TARGET" systemctl disable systemd-networkd.service systemd-networkd.socket \
+            systemd-networkd-wait-online.service
+        chroot "$TARGET" systemctl enable NetworkManager.service
+    fi
+
     # fstab + swap file (half the RAM, between 1 and 4 GB)
     root_uuid=$(blkid -s UUID -o value "${P}2")
     {
@@ -155,4 +182,4 @@ if [ "$status" != 0 ]; then
     die "A step failed (code $status). Details: $LOG\n\n$(tail -n 5 "$LOG")"
 fi
 
-whiptail --title "$TITLE" --msgbox "openVana Server is installed.\n\nRemove the USB stick / ISO and restart:\n\n    sudo reboot\n\nAfter the restart, log in as \"$USERNAME\" (also via SSH)." 14 64
+whiptail --title "$TITLE" --msgbox "openVana Server is installed.\n\nRemove the USB stick / ISO and restart:\n\n    sudo reboot\n\nAfter the restart, log in as \"$USERNAME\"\n(desktop: $DESKTOP, SSH works either way)." 15 64

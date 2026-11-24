@@ -1,0 +1,30 @@
+# openVana Server defaults for the GNOME desktop (only used when GNOME is installed).
+
+# A server must never fall asleep on its own (desktop and login screen).
+[org.gnome.settings-daemon.plugins.power]
+sleep-inactive-ac-type='nothing'
+sleep-inactive-battery-type='nothing'
+power-button-action='interactive'
+
+[org.gnome.desktop.session]
+idle-delay=uint32 900
+
+# openVana look: dark, green accent, black background
+[org.gnome.desktop.interface]
+color-scheme='prefer-dark'
+accent-color='green'
+
+[org.gnome.desktop.background]
+picture-uri=''
+picture-uri-dark=''
+picture-options='none'
+primary-color='#000000'
+color-shading-type='solid'
+
+[org.gnome.desktop.screensaver]
+picture-uri=''
+picture-options='none'
+primary-color='#000000'
+
+[org.gnome.shell]
+favorite-apps=['google-chrome.desktop', 'firefox-esr.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop']

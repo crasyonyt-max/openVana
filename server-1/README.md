@@ -18,6 +18,8 @@ Windows programs (`.exe` / `.msi`) through Wine, with or without a screen.
 | **.deb** | Native: `sudo apt install ./program.deb` |
 | **.exe / .msi** | Wine (64- and 32-bit): `vana-exe program.exe`, or run the `.exe` directly |
 | **Google Chrome** | Google's official `.deb`, installed automatically on the first start with internet, kept up to date automatically |
+| **Desktop (optional)** | GNOME: the installer asks, ticked by default like Debian's installer. Without it the server runs in text mode |
+| **Network** | Ethernet (cable). Wi-Fi is not set up |
 | **Remote access** | OpenSSH |
 
 ### VanaKernel Hydra
@@ -39,6 +41,7 @@ hardware support. On top of that it applies the VanaKernel changes
 - **Firewall on by default:** `ufw` blocks everything except SSH. Open more with e.g. `sudo ufw allow 80/tcp`.
 - **fail2ban:** blocks addresses that keep guessing SSH passwords.
 - **Locked-down accounts:** root can't log in, also not over SSH. Use your admin user with `sudo`.
+- **Never sleeps:** suspend and hibernate are blocked.
 - **Hardware watchdog:** a frozen machine restarts itself, if it has one. After a kernel panic it also reboots after 10 seconds.
 - **Firmware and microcode:** CPU microcode updates for Intel and AMD, plus common network-card firmware.
 - **Bounded logs:** logs are kept across reboots and limited to 500 MB.
@@ -75,6 +78,21 @@ sudo ufw allow 443/tcp                  # open a port in the firewall
 sudo ufw status                         # show firewall rules
 ```
 
+### GNOME desktop
+
+The installer's **Software selection** step offers the GNOME desktop, ticked by
+default as in Debian's installer. The GNOME packages are on the ISO, so this also
+works without internet. With GNOME:
+
+- **Login:** the computer starts into the GNOME login screen. SSH works as before.
+- **Network:** NetworkManager handles the network cable. GNOME shows the connection, and you can set a fixed IP in *Settings → Network*.
+- **Look:** dark design with a green accent and a black background. The login screen shows the openVana Server logo. Chrome, Firefox, Files, Terminal and Settings are pinned in the dock.
+- **No sleep:** the machine never suspends itself, neither on the desktop nor at the login screen. Sleep modes are blocked system-wide, because a server must stay reachable.
+
+To add GNOME to a text-mode installation later (needs internet):
+`sudo apt install gnome-core network-manager`, then
+`sudo systemctl disable --now systemd-networkd systemd-networkd.socket` and reboot.
+
 ### Google Chrome
 
 Google's license doesn't allow shipping Chrome inside the ISO. Instead, openVana
@@ -88,7 +106,7 @@ and Chrome updates install automatically like security updates.
 
 ### Static IP
 
-Network cards get their address by DHCP. For a fixed address, edit
+With GNOME: *Settings → Network*. In text mode, network cards get their address by DHCP. For a fixed address, edit
 `/etc/systemd/network/20-wired.network`:
 
 ```ini

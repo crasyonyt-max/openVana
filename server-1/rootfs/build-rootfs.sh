@@ -54,6 +54,15 @@ cp -rT --preserve=mode,timestamps "$HERE/overlay" "$ROOT"     # files become roo
 chmod 0440 "$ROOT"/etc/sudoers.d/* 2>/dev/null || true
 chmod -x "$ROOT/etc/update-motd.d/10-uname"                    # replaced by 05-openvana
 
+# openVana logos (login screen) and a plain black boot menu instead of Debian's artwork.
+# Registered as higher-priority alternatives (Debian's are 50), so they survive updates of
+# Debian's desktop-base package, which GNOME brings in.
+mkdir -p "$ROOT/usr/share/images/desktop-base"
+in_root update-alternatives --install /usr/share/images/vendor-logos vendor-logos \
+    /usr/share/openvana/vendor-logos 100
+in_root update-alternatives --install /usr/share/images/desktop-base/desktop-grub.png desktop-grub \
+    /usr/share/openvana/grub-background.png 100
+
 # branding that survives Debian updates (diverted, so base-files never overwrites it)
 for f in /usr/lib/os-release /etc/issue /etc/issue.net; do
     in_root dpkg-divert --quiet --local --no-rename --add "$f"
@@ -103,6 +112,10 @@ chmod 0440 "$ROOT/etc/sudoers.d/openvana-live"
 mkdir -p "$ROOT/etc/systemd/system-generators"
 ln -sf /dev/null "$ROOT/etc/systemd/system-generators/systemd-ssh-generator"
 
+# a server never goes to sleep by itself (also blocks GNOME's automatic suspend)
+in_root systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target \
+    suspend-then-hibernate.target
+
 echo "==> services"
 in_root systemctl enable systemd-networkd systemd-resolved ssh ufw fail2ban chrony \
     fstrim.timer openvana-startup-sound.service openvana-chrome-firstboot.timer
@@ -116,6 +129,12 @@ for pair in grub-pc:grub-pc grub-efi-amd64:grub-efi; do       # package:folder
     mkdir -p "$ROOT/usr/share/openvana/debs/${pair##*:}"
     mv "$ROOT"/var/cache/apt/archives/*.deb "$ROOT/usr/share/openvana/debs/${pair##*:}/"
 done
+
+echo "==> GNOME desktop packages for the installer (offline, stored on the ISO, not in the live system)"
+rm -rf "$OUT/pool"; mkdir -p "$OUT/pool/gnome"
+in_root apt-get install --download-only -y -q gnome-core network-manager
+mv "$ROOT"/var/cache/apt/archives/*.deb "$OUT/pool/gnome/"
+echo "GNOME: $(ls "$OUT/pool/gnome" | wc -l) packages, $(du -sh "$OUT/pool/gnome" | cut -f1)"
 
 echo "==> initramfs (boot screen + live boot)"
 in_root update-initramfs -u -k all

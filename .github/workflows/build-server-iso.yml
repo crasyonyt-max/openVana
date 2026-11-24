@@ -70,6 +70,8 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" out
           ISO=out/openvana-server-1.0-amd64.iso
           ls -lh "$ISO" out/kernel | tee -a build.log
+          # GitHub release files must stay below 2 GiB
+          [ "$(stat -c%s "$ISO")" -lt 2147483648 ] || { echo "ISO is too big for a GitHub release" | tee -a build.log; exit 1; }
           (cd out && sha256sum openvana-server-1.0-amd64.iso > openvana-server-1.0-amd64.iso.sha256)
           gh release delete server-1 --yes --cleanup-tag 2>&1 | tee -a build.log || true
           gh release create server-1 "$ISO" "$ISO.sha256" out/kernel/*.deb \

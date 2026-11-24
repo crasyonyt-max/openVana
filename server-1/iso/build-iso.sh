@@ -22,6 +22,7 @@ cp "$ROOT/boot/initrd.img-${hydra#*/vmlinuz-}" "$ISO/live/initrd.img"
 cp "$debian" "$ISO/live/vmlinuz-debian"
 cp "$ROOT/boot/initrd.img-${debian#*/vmlinuz-}" "$ISO/live/initrd-debian.img"
 cp "$HERE/grub.cfg" "$ISO/boot/grub/grub.cfg"
+[ -d "$OUT/pool" ] && cp -r "$OUT/pool" "$ISO/"          # GNOME packages for the installer
 
 mksquashfs "$ROOT" "$ISO/live/filesystem.squashfs" -comp zstd -Xcompression-level 19 -b 1M \
     -noappend -no-progress -wildcards -e 'proc/*' 'sys/*' 'dev/*' 'run/*' 'tmp/*'
