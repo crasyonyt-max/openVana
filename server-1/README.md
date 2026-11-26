@@ -7,6 +7,24 @@ Windows programs (`.exe` / `.msi`) through Wine, with or without a screen.
 **Download:** [openVana Server 1.0 release](https://github.com/crasyonyt-max/openVana/releases/tag/server-1)
 (`openvana-server-1.0-amd64.iso`)
 
+![openVana Server boot screen](docs/boot.gif)
+
+## Preview
+
+| GNOME desktop (optional) | GNOME login screen |
+|---|---|
+| ![GNOME desktop](docs/gnome-desktop.png) | ![GNOME login screen](docs/gnome-login.png) |
+
+**Text mode** (without a desktop): the login banner shows the IP address, kernel, memory and disk.
+
+![Text console](docs/console.png)
+
+**Installer:** text-mode wizard with Debian-style software selection.
+
+![Installer software selection](docs/installer.png)
+
+All screenshots are from openVana Server 1.0 running in a virtual machine.
+
 ## What's inside
 
 | Part | Details |

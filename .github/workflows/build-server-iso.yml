@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["server-1/**", ".github/workflows/build-server-iso.yml"]
+    paths: ["server-1/**", "!server-1/docs/**", "!server-1/README.md", ".github/workflows/build-server-iso.yml"]
 
 permissions:
   contents: write
